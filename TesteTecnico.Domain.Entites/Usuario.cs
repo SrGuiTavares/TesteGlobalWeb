@@ -1,10 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace TesteTecnico.Domain.Entites
+﻿namespace TesteTecnico.Domain.Entites
 {
     public class Usuario : BaseEntitie
     {
-        [Key]
         public string Documento { get; set; }
         public string NomeCompleto { get; set; }
         public DateTime Datanascimento { get; set; }

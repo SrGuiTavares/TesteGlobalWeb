@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using TesteTecnico.Application.Interface;
 using TesteTecnico.Application.ViewModel;
 
@@ -8,10 +10,14 @@ namespace TesteTecnico.WebApi.Rest.Controllers
     public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioAppService _appService;
+        private readonly IMapper _mapper;
+        private readonly IValidator<UsuarioViewModel> _validator;
 
-        public UsuarioController(IUsuarioAppService appService)
+        public UsuarioController(IUsuarioAppService appService, IMapper mapper, IValidator<UsuarioViewModel> validator)
         {
             _appService = appService;
+            _mapper = mapper;
+            _validator = validator;
         }
 
         /// <summary>
@@ -24,9 +30,27 @@ namespace TesteTecnico.WebApi.Rest.Controllers
         {
             try
             {
-                return Ok(await _appService.Insert(viewModel));
+                var resultadoValidacao = await _validator.ValidateAsync(viewModel);
+
+                if (resultadoValidacao.IsValid)
+                {
+                    var usuario = await _appService.SelecionarPorDocumento(viewModel.Documento);
+
+                    if (usuario == null)
+                    {
+
+                    }
+
+                    var retornoRequisicao = await _appService.Insert(viewModel);
+
+                    return Ok();
+                }
+                else
+                {
+                    return BadRequest(Results.ValidationProblem(resultadoValidacao.ToDictionary()));
+                }
             }
-            catch
+            catch(Exception ex)
             {
                 return BadRequest();
             }
@@ -38,11 +62,12 @@ namespace TesteTecnico.WebApi.Rest.Controllers
         /// <param name="viewModel"></param>
         /// <returns></returns>
         [HttpPut]
-        public async Task<IActionResult> Update(UsuarioViewModel viewModel)
+        public async Task<IActionResult> Update([FromBody] UsuarioViewModel viewModel)
         {
             try
             {
-                return Ok(await _appService.Update(viewModel));
+                var resultadoRequisicao = await _appService.Update(viewModel);
+                return Ok();
             }
             catch
             {
@@ -60,7 +85,8 @@ namespace TesteTecnico.WebApi.Rest.Controllers
         {
             try
             {
-                return Ok(await _appService.Delete(viewModel));
+                var resultadoRequisicao = await _appService.Delete(viewModel);
+                return Ok();
             }
             catch
             {
